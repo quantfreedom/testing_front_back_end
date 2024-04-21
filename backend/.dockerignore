@@ -1,0 +1,9 @@
+cdk.out
+app.py
+cdk.json
+Dockerfile
+.dockerignore
+/__pycache__/*
+*__pycache__/*
+__pycache__/
+logs/
