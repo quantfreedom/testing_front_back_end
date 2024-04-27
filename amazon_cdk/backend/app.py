@@ -1,3 +1,4 @@
+import os
 import aws_cdk as cdk
 from aws_cdk import Stack, Duration, CfnOutput
 from aws_cdk.aws_lambda import (
@@ -19,11 +20,19 @@ class TestingLambda(Stack):
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
+        source_path = os.path.abspath(
+            os.path.join(
+                os.path.dirname(__file__),
+                "../..",
+                "backend",
+            )
+        )
+        
         docker_func = DockerImageFunction(
             scope=self,
             id="DockerTestingLambda",
             code=DockerImageCode.from_image_asset(
-                directory="",
+                directory=source_path,
                 cache_disabled=True,
                 asset_name="testing_lambda",
             ),
