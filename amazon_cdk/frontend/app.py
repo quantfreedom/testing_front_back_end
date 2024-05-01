@@ -1,4 +1,4 @@
-import os
+from os.path import dirname, join, abspath
 from my_keys import AWS_ACCOUNT_NUMBER, AWS_REGION
 from constructs import Construct
 
@@ -27,6 +27,8 @@ from aws_cdk.aws_s3 import (
     RedirectProtocol,
 )
 
+SUB_DOMAIN_NAME = "blahblahblah"
+
 
 # this all works with aws-cdk 2.139.0
 class StaticWebsiteStack(Stack):
@@ -53,7 +55,7 @@ class StaticWebsiteStack(Stack):
         s3_bucket_src = Bucket(
             scope=self,
             id="s3_bucket_src",
-            bucket_name="www.blahblah.quantfreedom.com",
+            bucket_name=f"www.{SUB_DOMAIN_NAME}.quantfreedom.com",
             public_read_access=True,
             block_public_access=s3_block_public_access,
             encryption=BucketEncryption.S3_MANAGED,
@@ -71,7 +73,7 @@ class StaticWebsiteStack(Stack):
         Bucket(
             scope=self,
             id="s3_bucket_redirect",
-            bucket_name="blahblah.quantfreedom.com",
+            bucket_name=f"{SUB_DOMAIN_NAME}.quantfreedom.com",
             encryption=BucketEncryption.S3_MANAGED,
             removal_policy=RemovalPolicy.DESTROY,
             object_ownership=ObjectOwnership.BUCKET_OWNER_PREFERRED,
@@ -87,7 +89,7 @@ class StaticWebsiteStack(Stack):
         certificate_dns_validation = DnsValidatedCertificate(
             scope=self,
             id="Certificate",
-            domain_name="www.blahblah.quantfreedom.com",
+            domain_name=f"www.{SUB_DOMAIN_NAME}.quantfreedom.com",
             hosted_zone=hosted_zone,
             region="us-east-1",
         )
@@ -95,7 +97,7 @@ class StaticWebsiteStack(Stack):
         certificate_dns_validation_redirect = DnsValidatedCertificate(
             scope=self,
             id="Redirect_Certificate",
-            domain_name="blahblah.quantfreedom.com",
+            domain_name=f"{SUB_DOMAIN_NAME}.quantfreedom.com",
             hosted_zone=hosted_zone,
             region="us-east-1",
         )
@@ -122,7 +124,7 @@ class StaticWebsiteStack(Stack):
             price_class=PriceClass.PRICE_CLASS_100,
             enable_logging=True,
             default_behavior=behaviour,
-            domain_names=["www.blahblah.quantfreedom.com"],
+            domain_names=[f"www.{SUB_DOMAIN_NAME}.quantfreedom.com"],
             error_responses=error_response,
         )
 
@@ -134,13 +136,13 @@ class StaticWebsiteStack(Stack):
             price_class=PriceClass.PRICE_CLASS_100,
             enable_logging=True,
             default_behavior=behaviour,
-            domain_names=["blahblah.quantfreedom.com"],
+            domain_names=[f"{SUB_DOMAIN_NAME}.quantfreedom.com"],
             error_responses=error_response,
         )
 
-        source_path = os.path.abspath(
-            os.path.join(
-                os.path.dirname(__file__),
+        source_path = abspath(
+            join(
+                dirname(__file__),
                 "../..",
                 "frontend/dist/frontend/browser",
             )
@@ -148,7 +150,7 @@ class StaticWebsiteStack(Stack):
 
         BucketDeployment(
             scope=self,
-            id="www-blahblah-deploy",
+            id=f"www-{SUB_DOMAIN_NAME}-deploy",
             sources=[Source.asset(source_path)],
             destination_bucket=s3_bucket_src,
             distribution=distribution,
@@ -158,7 +160,7 @@ class StaticWebsiteStack(Stack):
         ARecord(
             scope=self,
             id="a-record",
-            record_name="www.blahblah",
+            record_name=f"www.{SUB_DOMAIN_NAME}",
             zone=hosted_zone,
             target=RecordTarget.from_alias(CloudFrontTarget(distribution)),
         )
@@ -166,7 +168,7 @@ class StaticWebsiteStack(Stack):
         ARecord(
             scope=self,
             id="redirect-a-record",
-            record_name="blahblah",
+            record_name=f"{SUB_DOMAIN_NAME}",
             zone=hosted_zone,
             target=RecordTarget.from_alias(CloudFrontTarget(redirect_distribution)),
         )
@@ -190,7 +192,7 @@ class StaticWebsiteStack(Stack):
         CfnOutput(
             scope=self,
             id="Website URL",
-            value="https://www.blahblah.quantfreedom.com",
+            value=f"https://www.{SUB_DOMAIN_NAME}.quantfreedom.com",
             description="The Website URL",
         )
 
@@ -203,7 +205,7 @@ app = App()
 
 StaticWebsiteStack(
     scope=app,
-    construct_id="blah-test-quantfreedom",
+    construct_id=f"{SUB_DOMAIN_NAME}-quantfreedom",
     env=env,
 )
 
